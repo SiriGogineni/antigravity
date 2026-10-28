@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Expense Tracker</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Google Fonts for clean typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header Section -->
+    <header class="app-header">
+      <div class="logo-area">
+        <span class="logo-icon">💰</span>
+        <div>
+          <h1>Expense Tracker</h1>
+          <p class="subtitle">Track and manage your everyday spending</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Top Summary Cards -->
+    <section class="summary-grid">
+      <div class="summary-card total-card">
+        <div class="card-icon">💳</div>
+        <div class="card-content">
+          <span class="card-label">Total Spent</span>
+          <span class="card-value" id="totalAmount">$0.00</span>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <div class="card-icon">📝</div>
+        <div class="card-content">
+          <span class="card-label">Total Transactions</span>
+          <span class="card-value" id="totalCount">0</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Area: Add Form + Expense Table -->
+    <main class="main-layout">
+      
+      <!-- Expense Input Form -->
+      <section class="card form-card">
+        <h2 class="card-title">Add New Expense</h2>
+        
+        <form id="expenseForm" novalidate>
+          <!-- Description Field -->
+          <div class="form-group">
+            <label for="description">Description</label>
+            <input 
+              type="text" 
+              id="description" 
+              placeholder="e.g., Grocery shopping, Coffee, Rent" 
+              required
+              autocomplete="off"
+            >
+            <span class="error-msg" id="descError">Please enter a description.</span>
+          </div>
+
+          <!-- Amount Field -->
+          <div class="form-group">
+            <label for="amount">Amount ($)</label>
+            <input 
+              type="number" 
+              id="amount" 
+              placeholder="0.00" 
+              step="0.01" 
+              min="0.01" 
+              required
+            >
+            <span class="error-msg" id="amountError">Please enter a valid positive amount.</span>
+          </div>
+
+          <!-- Category Field -->
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" required>
+              <option value="" disabled selected>Select category</option>
+              <option value="Food & Dining">🍔 Food & Dining</option>
+              <option value="Transportation">🚗 Transportation</option>
+              <option value="Housing & Utilities">🏠 Housing & Utilities</option>
+              <option value="Entertainment">🎬 Entertainment</option>
+              <option value="Shopping">🛍️ Shopping</option>
+              <option value="Health & Medical">💊 Health & Medical</option>
+              <option value="Other">📦 Other</option>
+            </select>
+            <span class="error-msg" id="catError">Please select a category.</span>
+          </div>
+
+          <!-- Date Field -->
+          <div class="form-group">
+            <label for="date">Date</label>
+            <input 
+              type="date" 
+              id="date" 
+              required
+            >
+            <span class="error-msg" id="dateError">Please select a date.</span>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <span>+ Add Expense</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Expense List Table -->
+      <section class="card table-card">
+        <div class="table-header-area">
+          <h2 class="card-title">Recent Expenses</h2>
+          <span class="badge badge-info" id="expenseCounter">0 records</span>
+        </div>
+
+        <div class="table-responsive">
+          <table class="expense-table" id="expenseTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th class="text-right">Amount</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="expenseList">
+              <!-- Dynamically populated rows will appear here -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Empty State (Shown when no expenses exist) -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">📊</div>
+          <h3>No expenses recorded yet</h3>
+          <p>Fill out the form on the left to add your first expense.</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Personal Expense Tracker &bull; Data is saved locally in your web browser</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
