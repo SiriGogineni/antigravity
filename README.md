@@ -14,7 +14,8 @@ This **Executive Control Plane Local MVP** delivers a single autonomous AI agent
 1. **Governed:** Risk classification (Low, Medium, High) with 3 autonomy modes (*Suggest Only*, *Act with Approval*, *Autonomous within Limits*).
 2. **Explainable:** Plain-language justifications answering *"What was done, Why it was done, Which data sources were used, and What alternatives were considered"*.
 3. **Reversible:** A **30-second Undo / Safety Recall Window** (BR-056) and an **Emergency One-Click Kill Switch** (BR-055) that halts all agent activities and revokes tool access immediately.
-4. **Cost-Controlled & Observable:** Real-time token tracking, monthly budgets ($ spend vs. cap), and Langfuse trace trees.
+4. **Live Persistent Chat:** A **Floating Live Chat Window** dockable from any tab with real-time reasoning steps, voice dictation, speech readout, and inline approval shortcuts.
+5. **Cost-Controlled & Observable:** Real-time token tracking, monthly budgets ($ spend vs. cap), and Langfuse trace trees.
 
 ---
 
@@ -116,6 +117,14 @@ Test the built-in defenses in the **Approvals & Guardrails** tab:
 * Three tiers of memory: **Short-Term** (active task context), **Long-Term** (preferences, VIP contacts, working hours), and **Episodic** (past decisions and approvals).
 * **Semantic Vector Search:** Search across memories with cosine similarity matching.
 * **Executive Control:** Full CRUD rights—the executive can view, add, edit, or permanently delete any memory.
+
+### 6. Persistent Floating Live Chat Window (Executive Copilot Dock)
+* **Ubiquitous Access:** Click the floating pill (**"💬 Chief of Staff Live"**) in the bottom-right corner to open the assistant over *any* tab without losing context.
+* **Real-Time Reasoning Steps:** An active status bar displays the agent's live reasoning pipeline (*Plan ➔ Route ➔ Act ➔ Observe ➔ Synthesize*).
+* **Voice Dictation (Speech-to-Text):** Click the microphone icon to dictate instructions hands-free via the Web Speech API.
+* **Audio Playback:** Click the `🔊` button on any agent response to hear an audible briefing summary.
+* **Direct Governance Shortcuts:** Agent responses recommending approvals include 1-click shortcut buttons to jump directly to the Approval Inbox.
+* **Unified State:** Synchronized in real time with the dedicated **Executive Copilot** tab (Tab 3).
 
 ---
 

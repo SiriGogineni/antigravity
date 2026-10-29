@@ -14,7 +14,9 @@ const STATE = {
   undoTimerInterval: null,
   pendingUndoAction: null,
   serverConnected: false,
-  apiBase: window.location.origin.includes('http') ? window.location.origin : 'http://localhost:8000'
+  apiBase: window.location.origin.includes('http') ? window.location.origin : 'http://localhost:8000',
+  chatMessages: [],
+  isFloatingChatOpen: false
 };
 
 // Rich Pre-populated Executive Personas & BRD Data
@@ -888,6 +890,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupPersonaSwitcher();
   setupApprovals();
   setupCopilot();
+  setupFloatingLiveChat();
   setupMemory();
   setupKillSwitch();
   setupGuardrailsTester();
@@ -952,6 +955,8 @@ function renderPersona(personaId) {
 
   // Header & Profile Bar
   document.getElementById('execAvatar').textContent = p.avatar;
+  const liveAvatar = document.getElementById('liveChatAvatar');
+  if (liveAvatar) liveAvatar.textContent = p.avatar;
   document.getElementById('execName').textContent = p.name;
   document.getElementById('execRoleBadge').textContent = p.title;
   document.getElementById('execCompanyBadge').textContent = p.company;
@@ -972,6 +977,7 @@ function renderPersona(personaId) {
 
   // Quick Prompts
   renderQuickPrompts(p.quick_prompts);
+  renderFloatingChatChips(p.quick_prompts);
 
   // Decision Memo
   renderDecisionMemo(p.decision_memo);
@@ -1426,38 +1432,186 @@ function openEditModal(apprId) {
 }
 
 // ---------------------------------------------------------------------------
-// Conversational Copilot & Reasoning Loop
+// Unified Conversational Copilot & Floating Live Chat Window
 // ---------------------------------------------------------------------------
 
 function setupCopilot() {
   const sendBtn = document.getElementById('sendChatBtn');
   const chatInput = document.getElementById('chatInput');
 
-  sendBtn.addEventListener('click', handleSendChat);
-  chatInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleSendChat();
-  });
+  if (sendBtn) sendBtn.addEventListener('click', () => handleUnifiedSend(chatInput.value));
+  if (chatInput) {
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleUnifiedSend(chatInput.value);
+    });
+  }
 
-  // Welcome message
-  appendChatMessage('agent', "Hello Alexandra. I am your Chief of Staff agent. I am monitoring your calendar, inboxes, and financial telemetry under your governed autonomy policy. How may I assist you?");
+  // Welcome message if chat history is empty
+  if (!STATE.chatMessages.length) {
+    appendChatMessage('agent', "Hello Alexandra. I am your Chief of Staff agent. I am monitoring your calendar, inboxes, and financial telemetry under your governed autonomy policy. How may I assist you?");
+  }
 }
 
-function handleSendChat() {
-  const input = document.getElementById('chatInput');
-  const message = input.value.trim();
+function setupFloatingLiveChat() {
+  const toggleBtn = document.getElementById('floatingChatToggleBtn');
+  const panel = document.getElementById('floatingChatPanel');
+  const closeBtn = document.getElementById('chatCloseBtn');
+  const expandBtn = document.getElementById('chatExpandBtn');
+  const clearBtn = document.getElementById('chatClearBtn');
+  const floatInput = document.getElementById('floatingChatInput');
+  const floatSendBtn = document.getElementById('floatingChatSendBtn');
+  const micBtn = document.getElementById('liveChatMicBtn');
+  const unreadBadge = document.getElementById('floatingChatUnreadBadge');
+
+  if (!toggleBtn || !panel) return;
+
+  // Toggle Live Chat open
+  toggleBtn.addEventListener('click', () => {
+    STATE.isFloatingChatOpen = true;
+    panel.classList.remove('hidden');
+    toggleBtn.classList.add('hidden');
+    if (unreadBadge) unreadBadge.classList.add('hidden');
+    setTimeout(() => {
+      if (floatInput) floatInput.focus();
+      const body = document.getElementById('floatingChatMessages');
+      if (body) body.scrollTop = body.scrollHeight;
+    }, 100);
+  });
+
+  // Close Live Chat
+  closeBtn.addEventListener('click', () => {
+    STATE.isFloatingChatOpen = false;
+    panel.classList.add('hidden');
+    toggleBtn.classList.remove('hidden');
+  });
+
+  // Expand / Contract Window
+  expandBtn.addEventListener('click', () => {
+    panel.classList.toggle('expanded');
+    expandBtn.textContent = panel.classList.contains('expanded') ? '⤡' : '⤢';
+  });
+
+  // Clear Chat History
+  clearBtn.addEventListener('click', () => {
+    if (confirm('Clear executive live chat conversation history?')) {
+      STATE.chatMessages = [];
+      const c1 = document.getElementById('chatMessages');
+      const c2 = document.getElementById('floatingChatMessages');
+      if (c1) c1.innerHTML = '';
+      if (c2) c2.innerHTML = '';
+      appendChatMessage('agent', "Conversation memory cleared. Ready for your next instruction.");
+    }
+  });
+
+  // Send from Floating Live Chat
+  if (floatSendBtn) {
+    floatSendBtn.addEventListener('click', () => handleUnifiedSend(floatInput.value));
+  }
+  if (floatInput) {
+    floatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleUnifiedSend(floatInput.value);
+    });
+  }
+
+  // Voice Dictation (Speech to Text)
+  if (micBtn) {
+    micBtn.addEventListener('click', () => {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        try {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = false;
+          recognition.interimResults = false;
+          recognition.lang = 'en-US';
+
+          recognition.onstart = () => {
+            micBtn.classList.add('recording');
+            micBtn.title = 'Listening to your voice...';
+          };
+
+          recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            floatInput.value = transcript;
+            micBtn.classList.remove('recording');
+            micBtn.title = 'Voice Dictation (Speech to Text)';
+            handleUnifiedSend(transcript);
+          };
+
+          recognition.onerror = () => {
+            micBtn.classList.remove('recording');
+            micBtn.title = 'Voice Dictation (Speech to Text)';
+          };
+
+          recognition.onend = () => {
+            micBtn.classList.remove('recording');
+          };
+
+          recognition.start();
+        } catch (e) {
+          micBtn.classList.remove('recording');
+          simulateVoiceDictation(floatInput);
+        }
+      } else {
+        simulateVoiceDictation(floatInput);
+      }
+    });
+  }
+
+  // Initial chips
+  const p = PERSONAS_DATA[STATE.activePersonaId];
+  if (p) renderFloatingChatChips(p.quick_prompts);
+}
+
+function simulateVoiceDictation(inputElement) {
+  const samplePrompts = [
+    "Synthesize Q3 Board Strategy Pack with verified metrics",
+    "Check cash balance and overdue customer receivables",
+    "What are my highest priority emails this morning?",
+    "Assess supplier lead time delay in Taiwan"
+  ];
+  const chosen = samplePrompts[Math.floor(Math.random() * samplePrompts.length)];
+  inputElement.value = chosen;
+  setTimeout(() => {
+    handleUnifiedSend(chosen);
+  }, 400);
+}
+
+function renderFloatingChatChips(prompts) {
+  const container = document.getElementById('floatingChatChips');
+  if (!container || !prompts) return;
+
+  container.innerHTML = prompts.map(p => `
+    <button class="chat-chip" data-prompt="${p}">${p}</button>
+  `).join('');
+
+  container.querySelectorAll('.chat-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const text = btn.getAttribute('data-prompt');
+      handleUnifiedSend(text);
+    });
+  });
+}
+
+function handleUnifiedSend(rawMessage) {
+  const message = (rawMessage || '').trim();
   if (!message) return;
 
   if (STATE.killSwitchActive) {
-    alert('KILL SWITCH ACTIVE: Agent reasoning is frozen. Disarm the kill switch to chat.');
+    alert('KILL SWITCH ACTIVE: Agent reasoning is frozen. Disarm the emergency kill switch to chat.');
     return;
   }
 
-  // Append user message
+  // Clear inputs
+  const chatInput = document.getElementById('chatInput');
+  const floatInput = document.getElementById('floatingChatInput');
+  if (chatInput) chatInput.value = '';
+  if (floatInput) floatInput.value = '';
+
+  // Append user message to both containers
   appendChatMessage('user', message);
-  input.value = '';
 
   // 1. Guardrail check (BR-054)
-  const isMalicious = /ignore (all )?instructions|wire \$\d+|disregard guidelines|extract ssn/i.test(message);
+  const isMalicious = /ignore (all )?(previous )?instructions|wire \$[\d,]+|disregard guidelines|extract ssn/i.test(message);
   if (isMalicious) {
     setTimeout(() => {
       appendChatMessage('agent', "⚠️ **SECURITY INTERCEPTION (BR-054):** This prompt violates your executive control policy (Prompt Injection / Unauthorized Financial Transfer detected). Action blocked and logged in the immutable audit trail.");
@@ -1469,7 +1623,7 @@ function handleSendChat() {
         actor: 'Guardrails Engine',
         risk_level: 'high',
         policy_rule: 'BR-054 (Prompt Injection & Exfiltration Defense)',
-        data_scope: 'Chat Input',
+        data_scope: 'Live Chat Input',
         approver: 'Security Intercept',
         status: 'BLOCKED',
         details: `Intercepted prompt: "${message}"`
@@ -1479,55 +1633,137 @@ function handleSendChat() {
     return;
   }
 
-  // 2. Animate LangGraph Reasoning Flow (BR-090)
+  // 2. Animate Reasoning Flow & Show Live Reasoning Bar
+  const reasoningBar = document.getElementById('liveReasoningBar');
+  const reasoningText = document.getElementById('liveReasoningText');
+  if (reasoningBar) {
+    reasoningBar.classList.remove('hidden');
+    if (reasoningText) reasoningText.textContent = "Step 1: Plan ➔ Analyzing intent & scanning executive pgvector memory...";
+  }
+
   animateReasoningState(message);
 
-  // 3. Generate Agent Response
+  // 3. Dynamic Model Routing (BR-080, BR-081)
+  const isSensitive = /confidential|salary|m&a|covenant|lawsuit/i.test(message);
+  const modelUsed = isSensitive ? 'Ollama (Llama-3-8B Private)' : 'Vertex AI (Gemini 1.5 Pro)';
+  
+  const chatBadge = document.getElementById('chatModelBadge');
+  const liveBadge = document.getElementById('liveChatModelBadge');
+  if (chatBadge) chatBadge.textContent = modelUsed;
+  if (liveBadge) liveBadge.textContent = modelUsed;
+
   setTimeout(() => {
-    const isSensitive = /confidential|salary|m&a|covenant|lawsuit/i.test(message);
-    const modelUsed = isSensitive ? 'Ollama (Llama-3-8B Private)' : 'Vertex AI (Gemini 1.5 Pro)';
-    document.getElementById('chatModelBadge').textContent = modelUsed;
+    if (reasoningText) reasoningText.textContent = `Step 2: Act ➔ Scoping tools via ${modelUsed}...`;
+  }, 350);
+
+  // 4. Generate Synthesized Response
+  setTimeout(() => {
+    if (reasoningBar) reasoningBar.classList.add('hidden');
 
     let response = generateClientAgentResponse(message);
     appendChatMessage('agent', response);
 
-    // Audit log entry
+    // If chat panel is closed, show unread badge
+    if (!STATE.isFloatingChatOpen) {
+      const badge = document.getElementById('floatingChatUnreadBadge');
+      if (badge) badge.classList.remove('hidden');
+    }
+
+    // Audit log entry (BR-091)
     AUDIT_LOG.unshift({
       id: `aud-chat-${Date.now().toString().slice(-4)}`,
       timestamp: new Date().toLocaleTimeString(),
       executive_id: STATE.activePersonaId,
-      action_name: 'Conversational Reasoning',
+      action_name: 'Live Chat Interaction',
       actor: 'Agent',
       risk_level: 'low',
       policy_rule: 'BR-012 (On-Demand Intelligence)',
       data_scope: 'Memory & Connected Tools',
       approver: 'Autonomous',
       status: 'COMPLETED',
-      details: `Executed conversational query with ${modelUsed}.`
+      details: `Executed live chat query via ${modelUsed}.`
     });
     renderAuditTable();
-  }, 700);
+  }, 750);
 }
 
 function appendChatMessage(sender, text) {
-  const container = document.getElementById('chatMessages');
-  const msgDiv = document.createElement('div');
-  msgDiv.className = `chat-msg ${sender}`;
+  STATE.chatMessages.push({ sender, text, timestamp: new Date().toLocaleTimeString() });
+
+  const c1 = document.getElementById('chatMessages');
+  const c2 = document.getElementById('floatingChatMessages');
 
   const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                             .replace(/\n/g, '<br>');
 
-  msgDiv.innerHTML = `
-    <div class="chat-bubble">
-      ${formattedText}
+  const hasApprovalTrigger = text.toLowerCase().includes('approval inbox');
+  const actionButtonHtml = hasApprovalTrigger ? `
+    <div class="msg-action-card">
+      <span class="msg-action-label">Governance: Requires Sign-Off (BR-023)</span>
+      <button class="btn btn-primary btn-sm" onclick="switchTab('tab-approvals')">
+        Open Approval Inbox ➔
+      </button>
     </div>
-  `;
-  container.appendChild(msgDiv);
-  container.scrollTop = container.scrollHeight;
+  ` : '';
+
+  const speechBtnHtml = sender === 'agent' ? `
+    <button class="msg-listen-btn" onclick="listenChatMessage('${escapeQuotes(text)}')" title="Listen with Text-to-Speech">🔊</button>
+  ` : '';
+
+  // Container 1 (Dedicated Tab 3)
+  if (c1) {
+    const msgDiv1 = document.createElement('div');
+    msgDiv1.className = `chat-msg ${sender}`;
+    msgDiv1.innerHTML = `
+      <div class="chat-bubble">
+        ${formattedText}
+        ${actionButtonHtml}
+        ${speechBtnHtml}
+      </div>
+    `;
+    c1.appendChild(msgDiv1);
+    c1.scrollTop = c1.scrollHeight;
+  }
+
+  // Container 2 (Floating Live Chat Panel)
+  if (c2) {
+    const msgDiv2 = document.createElement('div');
+    msgDiv2.className = `chat-msg-row ${sender}`;
+    if (sender === 'user') {
+      msgDiv2.innerHTML = `<div class="msg-bubble-user">${formattedText}</div>`;
+    } else {
+      msgDiv2.innerHTML = `
+        <div class="msg-bubble-agent">
+          ${formattedText}
+          ${actionButtonHtml}
+          ${speechBtnHtml}
+        </div>
+      `;
+    }
+    c2.appendChild(msgDiv2);
+    c2.scrollTop = c2.scrollHeight;
+  }
+}
+
+function listenChatMessage(rawText) {
+  if ('speechSynthesis' in window) {
+    // Strip markdown formatting for speech
+    const cleanText = rawText.replace(/\*\*/g, '').replace(/[•\n]/g, ' ');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.05;
+    speechSynthesis.speak(utterance);
+  } else {
+    alert(`Audio Readout: ${rawText.slice(0, 80)}...`);
+  }
+}
+
+function escapeQuotes(str) {
+  return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
 }
 
 function animateReasoningState(query) {
   const container = document.getElementById('reasoningFlowContainer');
+  if (!container) return;
   const isSensitive = /confidential|salary|m&a/i.test(query);
   const model = isSensitive ? 'Ollama Private Node' : 'Vertex AI Gemini 1.5 Pro';
 

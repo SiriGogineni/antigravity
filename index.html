@@ -36,6 +36,67 @@
     </div>
   </div>
 
+  <!-- FLOATING LIVE CHAT WINDOW (EXECUTIVE COPILOT DOCK) -->
+  <div id="floatingChatWidget" class="floating-chat-widget">
+    <!-- Floating Trigger Button -->
+    <button id="floatingChatToggleBtn" class="floating-chat-toggle-btn" title="Open Chief of Staff Live Chat">
+      <span class="chat-toggle-pulse"></span>
+      <span class="chat-toggle-icon">💬</span>
+      <span class="chat-toggle-label">Chief of Staff Live</span>
+      <span id="floatingChatUnreadBadge" class="chat-unread-badge hidden">1</span>
+    </button>
+
+    <!-- Live Chat Panel Window -->
+    <div id="floatingChatPanel" class="floating-chat-panel hidden">
+      <!-- Panel Header -->
+      <div class="floating-chat-header">
+        <div class="chat-header-info">
+          <div class="chat-agent-avatar" id="liveChatAvatar">⚡</div>
+          <div>
+            <div class="chat-agent-title">Executive Chief of Staff</div>
+            <div class="chat-agent-model-status">
+              <span class="status-dot green"></span>
+              <span id="liveChatModelBadge">Vertex AI Gemini 1.5 Pro</span>
+            </div>
+          </div>
+        </div>
+        <div class="chat-header-actions">
+          <button id="chatClearBtn" class="chat-action-btn" title="Clear Chat History">🗑️</button>
+          <button id="chatExpandBtn" class="chat-action-btn" title="Expand / Contract">⤢</button>
+          <button id="chatCloseBtn" class="chat-action-btn" title="Close Window">✕</button>
+        </div>
+      </div>
+
+      <!-- Active Reasoning Bar (Real-Time Plan/Route/Act/Observe) -->
+      <div id="liveReasoningBar" class="live-reasoning-bar hidden">
+        <div class="reasoning-spinner"></div>
+        <span id="liveReasoningText">Analyzing intent & scanning memory...</span>
+      </div>
+
+      <!-- Chat Messages Scroll Container -->
+      <div class="floating-chat-body" id="floatingChatMessages">
+        <!-- Messages rendered via JS -->
+      </div>
+
+      <!-- Quick Suggestion Chips -->
+      <div class="floating-chat-chips" id="floatingChatChips">
+        <!-- Chips injected per persona -->
+      </div>
+
+      <!-- Live Chat Input Footer -->
+      <div class="floating-chat-footer">
+        <div class="chat-input-wrapper">
+          <button id="liveChatMicBtn" class="chat-mic-btn" title="Voice Dictation (Speech to Text)">🎙️</button>
+          <input type="text" id="floatingChatInput" class="floating-chat-input" placeholder="Ask Chief of Staff (e.g. 'Draft board slides', 'Check cash balance')...">
+          <button id="floatingChatSendBtn" class="chat-send-btn" title="Send message">➔</button>
+        </div>
+        <div class="chat-security-footnote">
+          <span>🔒 Governed by BR-054 Guardrails • Zero Data Exfiltration</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- TOP EXECUTIVE CONTROL BAR -->
   <header class="top-control-bar">
     <div class="brand-cluster">
