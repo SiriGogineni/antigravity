@@ -1,0 +1,546 @@
+Business Requirements Document
+Executive Control Plane: A Single Autonomous Agent for C-Level Executives
+Platform: Google Cloud Platform (GCP)Document version: 0.2 (Refocused on one executive agent)Date: October 29, 2026Status: DraftOwner: [Product Owner / Sponsor name]
+1. Executive Summary
+This project delivers one autonomous AI agent, the Executive Agent, that acts as a digital chief of staff for each C-level executive (CEO, CFO, COO, CTO, CMO, CHRO) of a small business enterprise. A lightweight control plane wraps the agent so that everything it does is governed, explainable, reversible and cost-controlled.
+There is a single agent per executive, with one reasoning loop, one memory and one set of tools. It is not a fleet of cooperating agents. Capabilities such as briefing, inbox triage, scheduling, meeting preparation, decision support and follow-up tracking are skills of that one agent.
+The agent runs on GCP and is built with Python, FastAPI, Google ADK, LangGraph and LangChain. It uses PostgreSQL with pgvector for memory, Langfuse for observability, Vertex AI and Ollama-served Llama models for inference, and a React.js console for oversight. Git versions code, prompts and policies. Google Antigravity is the engineering team's development environment, and the A2A protocol is exposed only as an optional external interface.
+2. Business Context and Problem Statement
+Executives in small enterprises have no large support staff, so their scarcest resource, attention, is spent on coordination rather than decisions.
+Inboxes, calendars, chat and documents are spread across tools; executives spend hours each week triaging and context-switching.
+Preparation for meetings, board and investor updates is manual and often late.
+Commitments made in meetings and email are lost or tracked inconsistently.
+KPI changes and risks are noticed after the fact, because reports are compiled by hand.
+Executives will not hand over authority to AI that can send messages, commit money or expose confidential information without tight, visible control.
+Problem statement: Executives need a trusted assistant that works autonomously on routine work, protects confidential information, asks before acting on anything consequential, and shows exactly what it did and why.
+Why one agent: A single agent keeps one consistent understanding of the executive's priorities, preferences and context. It is simpler to govern, audit, secure and explain than a multi-agent system, and it costs less to run, which suits a small enterprise.
+3. Business Objectives and Success Metrics
+ID
+Objective
+Success metric (target to validate in pilot)
+BO-1
+Return executive time
+8+ hours per executive per week saved by month 3
+BO-2
+Cut inbox and scheduling load
+70% of routine emails triaged and 60% of scheduling handled with no executive effort
+BO-3
+Better-prepared meetings
+Briefing pack ready 30 minutes before 95% of meetings
+BO-4
+Nothing falls through
+90% of commitments captured and tracked to closure
+BO-5
+Earlier risk detection
+KPI anomalies flagged within 24 hours of data availability
+BO-6
+Executive trust
+0 unapproved high-risk actions; 100% of actions in the audit log; executive trust score of 4 out of 5 or higher
+BO-7
+Predictable cost
+AI cost per executive within budget in 99% of months
+BO-8
+Reliability
+99.5% availability; 90% task success rate
+4. Scope
+In scope (Release 1)
+One Executive Agent instance per executive, each with its own identity, memory, permissions and budget.
+Executive capabilities: daily briefing, inbox triage and drafting, scheduling, meeting preparation and follow-up, KPI and risk monitoring, decision-support memos, document and board-pack drafting, commitment tracking, travel and logistics support.
+Control plane: policy and autonomy settings, approval inbox, kill switch, audit log, cost budgets, observability, connector management and administration.
+Conversational and notification channels: web console, email and chat notifications [confirm: Slack, Teams, SMS].
+Integrations: Google Workspace (Gmail, Calendar, Drive, Docs), accounting, CRM and chat [confirm list].
+Model gateway across Vertex AI and Ollama-hosted Llama models.
+Out of scope (Release 1)
+Multiple cooperating agents, agent marketplaces and agent-to-agent delegation inside the platform.
+Autonomous payments, contract signature or any irreversible financial commitment.
+Voice and telephony, and native mobile apps (responsive web only).
+Agents for non-executive staff.
+Regulated workflows such as clinical or legal advice [confirm].
+5. Executive Personas and Stakeholders
+Persona
+Typical needs from the agent
+CEO
+Daily brief, investor and board prep, stakeholder follow-up, strategic decision memos, calendar protection
+CFO
+Cash and receivables alerts, budget variance, month-end and board financial packs, approval queues
+COO
+Operations KPIs, escalation triage, vendor and supplier follow-up, process exception alerts
+CTO / CIO
+Incident and security summaries, roadmap and delivery status, vendor evaluation briefs
+CMO / CRO
+Pipeline and campaign performance, lead follow-up, customer and press monitoring
+CHRO
+Hiring pipeline, onboarding and attrition signals, policy drafting, sensitive-communication handling
+Executive assistant or chief of staff (delegate)
+Reviews approvals, tunes preferences and covers the executive when away
+Platform administrator
+Provisions executives, sets enterprise policy, manages connectors and budgets
+Security and compliance lead
+Reviews access, audit and data-handling controls
+Executive sponsor
+Owns business case and success metrics
+6. Solution Overview
+The Executive Agent is one autonomous agent with a plan, act, observe loop, durable memory and a registry of tools, supervised by the control plane. The control plane decides what the agent may do; the agent decides how to do it.
+6.1 Core components
+Component
+Responsibility
+Executive console (React.js)
+Dashboard, approval inbox, conversation, preferences, activity timeline, audit explorer, kill switch
+API and policy layer (FastAPI)
+Authentication, executive and tenant context, policy enforcement before every tool call, streaming responses
+Agent core (Google ADK)
+Defines the single agent, its skills, tools, instructions and evaluation sets
+Workflow engine (LangGraph)
+Durable multi-step tasks, checkpoints, human-in-the-loop interrupts, scheduled and event-driven runs
+Tool and connector layer (LangChain)
+Wrappers for email, calendar, documents, accounting, CRM and chat with scoped OAuth credentials
+Memory (PostgreSQL + pgvector)
+Executive preferences, contacts, commitments, document embeddings, episodic memory and checkpoints
+Model gateway
+Routes to Vertex AI or Ollama-hosted Llama models by data sensitivity, cost and latency, with fallback
+Guardrails and policy engine
+Risk classification, autonomy levels, spend and recipient limits, prompt-injection and data-leak defenses
+Observability (Langfuse)
+Traces, prompt versions, evaluations, token and cost analytics
+External interface (A2A, optional)
+Agent card so an external agent or partner system can request tasks, subject to policy
+6.2 Technology roles
+Technology
+Role
+GCP
+Hosting, identity, networking, managed data, model access
+Python and FastAPI
+Backend, agent services, API
+React.js
+Executive and administrator console
+Google ADK
+Agent definition, tools, evaluation
+LangGraph
+Stateful, resumable workflows and approvals
+LangChain
+Connectors, retrievers, document loaders
+Google A2A
+Optional external agent interoperability
+Langfuse
+Tracing, prompt management, evals, cost
+Ollama and Llama models
+Private, low-cost inference for sensitive or routine tasks
+PostgreSQL and pgvector
+System of record, memory, semantic search
+Git
+Version control for code, prompts, policies and agent definitions
+Google Antigravity
+Agent-first development environment for engineers
+ADK and LangGraph overlap. Proposed split: ADK defines the agent and tools; LangGraph runs long, stateful tasks. A design spike should confirm this.
+7. Business Requirements
+Priority uses MoSCoW: Must, Should, Could. All requirements apply to the single Executive Agent and its control plane.
+7.1 Executive Identity, Access and Profile
+ID
+Requirement
+Priority
+BR-001
+Each executive shall have a dedicated agent instance with isolated memory, credentials, policies and budget.
+Must
+BR-002
+Sign-in shall use Google Workspace SSO with MFA; sessions shall be short-lived with step-up authentication for approvals.
+Must
+BR-003
+The agent shall act under its own service identity with least-privilege, revocable delegated access to the executive's accounts.
+Must
+BR-004
+An executive shall be able to name delegates (assistant, chief of staff) with limited approval and view rights.
+Should
+BR-005
+Onboarding shall capture priorities, working hours, communication tone, VIP contacts and no-go topics in under 30 minutes.
+Must
+7.2 Briefing and Business Intelligence
+ID
+Requirement
+Priority
+BR-010
+The agent shall deliver a daily brief (agenda, priority emails, risks, decisions needed) at a time the executive sets.
+Must
+BR-011
+The agent shall monitor role-specific KPIs from connected systems and alert on anomalies with a plain-language explanation.
+Must
+BR-012
+The agent shall produce on-demand briefs on a person, company, topic or deal using internal data and, where permitted, public sources, with citations.
+Should
+BR-013
+Every figure or claim in a brief shall link to its source; unverifiable items shall be labelled.
+Must
+BR-014
+The agent shall prepare periodic board, investor and leadership update drafts from approved data sources.
+Should
+7.3 Communication Management
+ID
+Requirement
+Priority
+BR-020
+The agent shall triage the inbox into act-now, delegate, defer and ignore, with a one-line reason for each.
+Must
+BR-021
+The agent shall draft replies in the executive's voice, learning from edits and rejections.
+Must
+BR-022
+The agent shall send messages autonomously only to recipients and categories the executive has allowed; all others require approval.
+Must
+BR-023
+Messages that involve legal, financial commitments, HR matters, press or investors shall always require approval.
+Must
+BR-024
+The agent shall summarise long threads and chat channels with open questions and owners.
+Should
+7.4 Scheduling and Meetings
+ID
+Requirement
+Priority
+BR-030
+The agent shall propose, book, move and decline meetings according to the executive's rules (focus time, buffers, priorities).
+Must
+BR-031
+The agent shall assemble a pre-read for each meeting (attendees, history, open items, suggested objectives).
+Must
+BR-032
+With permission, the agent shall capture notes and actions from meetings and circulate drafts for approval.
+Should
+BR-033
+The agent shall handle travel and logistics proposals but not make non-refundable bookings without approval.
+Could
+7.5 Decisions, Documents and Commitments
+ID
+Requirement
+Priority
+BR-040
+The agent shall maintain a ledger of commitments (made by or to the executive) with owner, due date and status.
+Must
+BR-041
+The agent shall chase overdue items with the executive's approval rules and report slippage in the daily brief.
+Must
+BR-042
+The agent shall draft decision memos with options, assumptions, risks and a recommendation, clearly separating fact from inference.
+Should
+BR-043
+The agent shall draft and revise documents, presentations and reports in the company's templates.
+Should
+7.6 Autonomy, Policy and Guardrails
+ID
+Requirement
+Priority
+BR-050
+Every action shall carry a risk level (low, medium, high) and run under one of three autonomy modes: suggest only, act with approval, act autonomously within limits.
+Must
+BR-051
+The executive shall set autonomy per capability and can raise or lower it at any time; trust shall ramp up gradually from suggest only.
+Must
+BR-052
+Policies shall cap spend, recipients, data scope, send volume and working hours.
+Must
+BR-053
+Irreversible or external-facing actions (payments, deletions, first contact with new external parties, contract language) shall require approval by default.
+Must
+BR-054
+The system shall detect prompt injection, data exfiltration and confidential-data leakage in inputs, tool results and outputs.
+Must
+BR-055
+A one-click kill switch shall stop all agent activity immediately and revoke tool access.
+Must
+BR-056
+Where practical, actions shall be undoable (recall, undo send window, draft-first) and the undo path shall be shown.
+Should
+7.7 Memory and Personalisation
+ID
+Requirement
+Priority
+BR-060
+The agent shall keep short-term (task), long-term (preferences, relationships) and episodic (past decisions) memory in PostgreSQL and pgvector.
+Must
+BR-061
+The executive shall be able to view, correct and delete anything the agent remembers.
+Must
+BR-062
+Executive data and embeddings shall never be shared across executives or used to train shared models.
+Must
+BR-063
+Sensitive categories (HR, legal, M&A, board matters) shall be restricted by label and excluded from broad retrieval unless explicitly allowed.
+Must
+7.8 Integrations
+ID
+Requirement
+Priority
+BR-070
+Connectors shall use OAuth with scoped, revocable tokens stored in Secret Manager.
+Must
+BR-071
+Release 1 connectors: Gmail, Google Calendar, Drive and Docs, one accounting system, one CRM, one chat tool [confirm].
+Must
+BR-072
+Each tool shall declare scopes, inputs, outputs and risk level in a registry; the agent can only call registered tools.
+Must
+BR-073
+The agent should expose an optional A2A agent card and accept external requests under policy.
+Could
+7.9 Model Management
+ID
+Requirement
+Priority
+BR-080
+The gateway shall support Vertex AI models and Ollama-hosted Llama models behind one interface.
+Must
+BR-081
+Routing shall follow policy: confidential content to private models, complex reasoning to stronger cloud models, routine tasks to low-cost models.
+Must
+BR-082
+Model and prompt versions shall be pinned, tested and promoted through Git-based release gates.
+Must
+BR-083
+Monthly token and cost budgets shall alert at thresholds and stop at a hard limit.
+Must
+7.10 Transparency, Audit and Oversight
+ID
+Requirement
+Priority
+BR-090
+Every run shall be traced in Langfuse (prompts, tool calls, outputs, latency, cost) and linked to the audit record.
+Must
+BR-091
+An immutable audit log shall record what the agent did, on whose authority, using which data and policy, and who approved it.
+Must
+BR-092
+The console shall explain any action in plain language: what, why, which sources, what alternatives.
+Must
+BR-093
+The executive shall be able to approve, edit or reject from email, chat or the console in a few seconds; edits shall feed learning.
+Must
+BR-094
+The system shall alert on anomalies such as loops, cost spikes, repeated failures and policy violations.
+Must
+BR-095
+A weekly report shall show time saved, actions taken, approvals, overrides and spend.
+Should
+8. Representative Executive Use Cases
+ID
+Executive
+Scenario
+Autonomy at launch
+UC-1
+All
+Morning brief. At 7:00 the agent sends today's agenda, the five emails that matter, risks, and decisions needed.
+Autonomous
+UC-2
+CEO
+Inbox triage. Routine messages are sorted and answered; the CEO's own-voice drafts for investors and partners wait for approval.
+Draft and approve
+UC-3
+CEO, CFO
+Board pack. The agent pulls approved figures, drafts commentary, flags gaps, and prepares the pack for review.
+Suggest only
+UC-4
+CFO
+Cash alert. Receivables slip past a threshold; the agent explains the cause, lists the top overdue accounts and drafts reminders for approval.
+Alert autonomous; send with approval
+UC-5
+COO
+Escalation watch. A supplier delay is detected in email and operations data; the agent summarises impact and proposes responses.
+Suggest only
+UC-6
+CTO
+Incident digest. After an outage the agent assembles a timeline, customer impact and a draft status update.
+Draft and approve
+UC-7
+CMO
+Pipeline change. Conversion drops week over week; the agent surfaces likely drivers and suggested actions.
+Alert autonomous
+UC-8
+CHRO
+Sensitive message. The agent drafts a policy notice but never sends HR content without approval, and keeps it out of general memory.
+Always approve
+UC-9
+All
+Meeting follow-up. The agent records actions, assigns owners, and chases overdue items.
+Draft and approve
+UC-10
+All
+Away mode. The executive travels; a delegate sees only what the agent escalates.
+Reduced autonomy
+9. Non-Functional Requirements
+Category
+Requirement
+Security
+Zero-trust design; per-executive data isolation with PostgreSQL row-level security; secrets in Secret Manager; keys in Cloud KMS; least-privilege IAM; encryption in transit and at rest; annual penetration test
+Confidentiality
+Executive data classified by sensitivity; PII and confidential content masked in traces and logs; private-model routing for restricted data
+Privacy and compliance
+Alignment with SOC 2 Type II, GDPR and CCPA; data residency choice; deletion on request; disclosure that messages were drafted or sent by an agent where required
+Availability
+99.5% monthly; multi-zone deployment; RPO 15 minutes, RTO 4 hours
+Performance
+Console pages under 2 seconds at p95; approval notification under 10 seconds; first response token under 3 seconds at p95 on cloud models; daily brief delivered within 5 minutes of its schedule
+Scalability
+Up to 500 executive agents in the first year; horizontal scale of stateless services
+Reliability
+Idempotent side-effecting tool calls; retries with backoff; circuit breakers on connectors and models; resumable workflows
+Quality
+Factual accuracy of briefs of at least 95% on a golden dataset; hallucination rate under 2% on sourced claims; regression evaluations gate every release
+Maintainability
+Infrastructure as code (Terraform); CI/CD with evaluation gates; prompts, policies and agent definitions versioned in Git
+Auditability
+Tamper-evident audit retention of at least 7 years [confirm]
+Usability
+An executive completes onboarding and a first approval without training; accessible to WCAG 2.1 AA
+Cost
+AI plus infrastructure cost per executive under [X] per month
+Responsible AI
+Human override at all times; explainable actions; safety and bias testing before release
+10. GCP Deployment View (Proposed)
+Capability
+Proposed GCP service
+API, agent and workflow services
+Cloud Run (initially); GKE for Ollama GPU workloads
+Executive console
+Cloud Run or Firebase Hosting behind Cloud Load Balancing and Cloud Armor
+Database and vectors
+Cloud SQL for PostgreSQL or AlloyDB with pgvector
+Documents
+Cloud Storage
+Cloud models
+Vertex AI
+Private models
+Ollama with Llama models on GKE GPU node pools
+Events and schedules
+Cloud Scheduler, Pub/Sub, Cloud Tasks
+Secrets and keys
+Secret Manager, Cloud KMS
+Identity
+Cloud Identity, Identity-Aware Proxy, IAM, Workload Identity
+Observability
+Langfuse (self-hosted or cloud), Cloud Logging, Monitoring, Trace
+Delivery
+Git with Cloud Build or GitHub Actions, Artifact Registry, Terraform
+Security
+VPC Service Controls, Security Command Center
+11. Delivery Phases and Milestones
+The agent earns autonomy in stages: each phase ends with a gate that must pass before the agent gets more freedom.
+Phase
+Indicative duration
+Outcome
+Gate to proceed
+0. Discovery
+3 weeks
+Executive interviews, confirmed connectors, threat model, ADK and LangGraph spike
+Architecture and risk sign-off
+1. Foundation
+6 weeks
+Identity, data layer, model gateway, Langfuse, audit log, CI/CD, console shell
+Security baseline passed
+2. Read-only agent
+6 weeks
+Daily brief, inbox triage, meeting pre-reads, KPI alerts; no outbound actions
+Brief accuracy of 95% or higher on golden set
+3. Act with approval
+8 weeks
+Drafting, scheduling, commitment tracking, approval inbox, kill switch
+0 policy violations in red-team tests
+4. Limited autonomy
+6 weeks
+Autonomous low-risk actions within executive-set limits; pilot with 5 to 10 executives
+Pilot trust score of 4 out of 5 or higher; 0 unapproved high-risk actions
+5. General availability
+4 weeks
+Documentation, support, billing and launch
+Executive sponsor approval
+Prompts, tool definitions and policies are treated as code in Git, reviewed by pull request, and promoted only after automated evaluations pass. Google Antigravity may assist development, but every merge requires human review.
+12. Risks and Mitigations
+ID
+Risk
+Likelihood / Impact
+Mitigation
+R-1
+Agent sends a wrong or damaging message
+M / H
+Draft-first default, approval for external and sensitive recipients, undo windows, kill switch
+R-2
+Prompt injection through emails or documents
+H / H
+Instruction and data separation, tool-level permission checks, injection detection, red-team testing
+R-3
+Confidential executive data leaks
+L / H
+Sensitivity labels, private-model routing, masked traces, strict retrieval scoping, access reviews
+R-4
+Hallucinated facts in briefs or board material
+M / H
+Mandatory source links, uncertainty labels, golden-set evaluation, human review of board material
+R-5
+Executives over-trust or under-use the agent
+M / M
+Gradual autonomy ramp, transparent explanations, weekly value report
+R-6
+Framework churn (ADK, LangGraph, LangChain, A2A)
+H / M
+Thin abstraction layer, pinned versions, contract tests, early spike
+R-7
+Cost overruns from long-running autonomous loops
+M / M
+Step and token limits, budgets, loop detection, routine work on smaller models
+R-8
+GPU hosting complexity for Ollama
+M / M
+Start with Vertex AI; add Ollama for defined sensitive workloads; scale to zero where possible
+R-9
+Third-party API limits or changes
+M / M
+Connector abstraction, rate-limit handling, monitoring
+R-10
+Regulatory or disclosure obligations for AI-sent communication
+M / M
+Configurable disclosures, legal review, audit evidence
+13. Assumptions, Constraints and Dependencies
+Assumptions
+"Illama" is read as Meta's Llama models served through Ollama; please confirm.
+Google Antigravity is a development tool for engineers, not a product runtime component.
+One agent is provisioned per executive; there is no multi-agent collaboration in Release 1.
+Target organisations have roughly 5 to 250 employees and 3 to 10 C-level executives [confirm].
+Google Workspace is the primary productivity suite; English is the only language in Release 1.
+Constraints
+Must run on GCP using the specified technology stack.
+Irreversible or financial actions require human approval in Release 1.
+Budget, team size and launch date: [to be set by the sponsor].
+Dependencies
+Vertex AI model access and GPU quota in the selected region.
+API access and approvals for the accounting, CRM and chat connectors.
+Maturity of ADK, LangGraph, A2A and Antigravity releases.
+Legal and security review of delegated access to executive mailboxes and calendars.
+Five to ten pilot executives committed to weekly feedback.
+14. Acceptance Criteria and Open Questions
+Acceptance criteria (Release 1)
+An executive onboards, connects Gmail and Calendar, and receives a first correct daily brief within 30 minutes.
+All Must requirements pass user acceptance testing.
+100% of agent actions appear in the audit log and in Langfuse traces.
+Red-team tests show 0 unapproved high-risk actions and 0 successful prompt-injection exfiltrations.
+The kill switch halts all activity and revokes tool access within 10 seconds.
+Brief accuracy reaches at least 95% on the golden dataset.
+Pilot executives report at least 8 hours per week saved and a trust score of 4 out of 5 or higher.
+Load, failover and cost-budget tests meet the non-functional targets.
+Open questions
+Which executive roles and which industries are in the first pilot?
+Which chat channels are required beyond email (Slack, Teams, SMS, WhatsApp)?
+May the agent send autonomously on the executive's behalf, and under what disclosure wording?
+Is meeting recording or transcription permitted, and in which jurisdictions?
+Which sources count as authoritative for board and financial figures?
+Should Langfuse be self-hosted or use Langfuse Cloud?
+Is the A2A external interface needed in Release 1 or later?
+What are the budget, team and target launch date?
+15. Approval
+Name
+Role
+Signature
+Date
+[Name]
+Executive Sponsor
+[Name]
+Product Owner
+[Name]
+Engineering Lead
+[Name]
+Security and Compliance Lead
